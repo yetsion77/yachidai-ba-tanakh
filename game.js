@@ -330,21 +330,29 @@ function startGame() {
   // Set mode UI elements
   const livesEl = document.getElementById('lives-display');
   const timerWrapper = document.getElementById('timer-wrapper');
+  const timerBox = document.getElementById('timer-box');
+  const streakBox = document.getElementById('streak-box');
   
   // Initialize mode settings
   if (currentMode === 'classic') {
     lives = 3;
     livesEl.style.display = 'flex';
     timerWrapper.style.display = 'block';
+    timerBox.style.display = 'none';
+    streakBox.style.display = 'flex';
     renderHearts();
   } else if (currentMode === 'time-attack') {
     timeLeft = 60;
     livesEl.style.display = 'none';
     timerWrapper.style.display = 'block';
+    timerBox.style.display = 'flex';
+    streakBox.style.display = 'none';
     updateTimerBar(100);
   } else { // practice
     livesEl.style.display = 'none';
     timerWrapper.style.display = 'none';
+    timerBox.style.display = 'none';
+    streakBox.style.display = 'flex';
   }
   
   updateStatsUI();
@@ -461,6 +469,18 @@ function startGlobalTimer() {
     const percentage = (timeLeft / 60) * 100;
     updateTimerBar(percentage);
     
+    // Update numeric seconds
+    const timerVal = document.getElementById('timer-val');
+    if (timerVal) {
+      const ceilTime = Math.ceil(timeLeft);
+      timerVal.innerText = ceilTime;
+      if (timeLeft <= 10) {
+        timerVal.style.color = 'var(--color-error)';
+      } else {
+        timerVal.style.color = '';
+      }
+    }
+    
     if (timeLeft <= 0) {
       stopTimer();
       endGame();
@@ -542,12 +562,11 @@ function handleChoiceSelect(button, selectedBook) {
     } else if (currentMode === 'time-attack') {
       pointsGained = 100;
       score += pointsGained;
-      timeLeft = Math.min(60, timeLeft + 3); // add 3 seconds
-      spawnScorePopup(button, `+100 XP (+3 ש')`);
+      spawnScorePopup(button, `+100`);
     } else { // practice
       pointsGained = 100;
       score += pointsGained;
-      spawnScorePopup(button, `+100 XP`);
+      spawnScorePopup(button, `+100`);
     }
     
     updateStatsUI();
@@ -555,11 +574,18 @@ function handleChoiceSelect(button, selectedBook) {
     // Disable all options
     disableAllChoices();
     
-    // Load next question automatically after brief delay
-    setTimeout(() => {
-      currentWordIndex++;
-      loadNextWord();
-    }, 1200);
+    // Practice mode shows learning recap even for correct answers
+    if (currentMode === 'practice') {
+      setTimeout(() => {
+        showLearningRecap(wordObj, true);
+      }, 1000);
+    } else {
+      // Load next question automatically after brief delay
+      setTimeout(() => {
+        currentWordIndex++;
+        loadNextWord();
+      }, 1200);
+    }
     
   } else {
     // INCORRECT ANSWER
@@ -574,8 +600,7 @@ function handleChoiceSelect(button, selectedBook) {
       lives--;
       renderHearts();
     } else if (currentMode === 'time-attack') {
-      timeLeft = Math.max(0, timeLeft - 5); // deduct 5 seconds
-      spawnScorePopup(button, `-5 ש'`);
+      // Time Attack: time just runs down, no subtraction
     }
     
     updateStatsUI();
@@ -599,8 +624,8 @@ function handleChoiceSelect(button, selectedBook) {
           loadNextWord();
         }
       } else {
-        // Classic & Practice modes show learning panel on error
-        showLearningRecap(wordObj);
+        // Practice mode shows learning panel on error
+        showLearningRecap(wordObj, false);
       }
     }, 1000);
   }
@@ -623,8 +648,20 @@ function highlightAnswers(clickedBtn) {
   });
 }
 
-function showLearningRecap(wordObj) {
+function showLearningRecap(wordObj, isCorrect = false) {
   const panel = document.getElementById('feedback-panel');
+  const badge = panel.querySelector('.feedback-badge');
+  const title = panel.querySelector('.feedback-title');
+  
+  if (isCorrect) {
+    badge.className = 'feedback-badge correct';
+    badge.innerText = 'נכון!';
+    title.innerText = 'כל הכבוד! למדת מילה חדשה:';
+  } else {
+    badge.className = 'feedback-badge incorrect';
+    badge.innerText = 'טעות!';
+    title.innerText = 'המילה מופיעה בספר אחר...';
+  }
   
   // Set contents
   document.getElementById('learning-word').innerText = wordObj.word;
