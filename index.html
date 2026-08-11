@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>יחידאי בתנ״ך - משחק זיהוי מילים</title>
+  
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="משחק טריוויה מהנה ומאתגר לזיהוי מילים המופיעות פעם אחת בלבד (או רק בספר אחד) בתנ״ך. בחנו את בקיאותכם!">
+  <meta name="keywords" content="תנ״ך, מילים, יחידאי, משחק, חידון תנ״ך, טריוויה, עברית">
+  
+  <!-- Apple Web App Meta -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#16121a">
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Background Ambiance -->
+  <div class="ambient-glows">
+    <div class="glow-orb-1"></div>
+    <div class="glow-orb-2"></div>
+  </div>
+
+  <!-- Confetti Canvas -->
+  <canvas id="confetti-canvas"></canvas>
+
+  <div class="app-container">
+
+    <!-- 1. MAIN MENU SCREEN -->
+    <div id="main-menu-screen" class="screen active">
+      <div class="brand-section">
+        <div class="logo-container">
+          <div class="logo-glow"></div>
+          <h1 class="game-title" id="main-title">יחידאי בתנ״ך</h1>
+        </div>
+        <p class="game-subtitle">מילים המופיעות רק בספר אחד בתנ״ך</p>
+      </div>
+
+      <div class="menu-card">
+        <div class="section-label">בחרו מצב משחק</div>
+        <div class="mode-selector">
+          <!-- Mode: Classic -->
+          <button class="mode-btn" data-mode="classic" id="btn-mode-classic">
+            <div class="mode-icon">🏆</div>
+            <div class="mode-info">
+              <span class="mode-title">מסלול חיים</span>
+              <span class="mode-desc">3 פסילות, 15 שניות לשאלה, מכפיל נקודות ברצף</span>
+            </div>
+          </button>
+          
+          <!-- Mode: Time Attack -->
+          <button class="mode-btn" data-mode="time-attack" id="btn-mode-time">
+            <div class="mode-icon">⚡</div>
+            <div class="mode-info">
+              <span class="mode-title">מרוץ נגד הזמן</span>
+              <span class="mode-desc">60 שניות להתחלה. תשובה נכונה מוסיפה זמן, טעות מורידה</span>
+            </div>
+          </button>
+          
+          <!-- Mode: Practice -->
+          <button class="mode-btn" data-mode="practice" id="btn-mode-practice">
+            <div class="mode-icon">📖</div>
+            <div class="mode-info">
+              <span class="mode-title">מצב אימון</span>
+              <span class="mode-desc">בלי זמנים, בלי פסילות. לשחק וללמוד מילים חדשות</span>
+            </div>
+          </button>
+        </div>
+
+        <button class="btn-primary" id="play-btn">
+          <span>התחל משחק</span>
+          <span>←</span>
+        </button>
+      </div>
+
+      <div class="menu-footer">
+        <button class="btn-icon" id="sound-toggle-btn" aria-label="השתק/הפעל שמע">
+          <span id="sound-icon">🔊</span>
+        </button>
+        
+        <div class="highscore-pill">
+          <span>שיא נוכחי:</span>
+          <span class="highscore-val" id="highscore-val">0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. GAME SCREEN -->
+    <div id="game-screen" class="screen">
+      <div class="game-header">
+        <div class="header-group">
+          <div class="stat-box" id="score-box">
+            <span class="stat-label">ניקוד</span>
+            <span class="stat-value gold" id="score-val">0</span>
+          </div>
+          <div class="stat-box" id="streak-box">
+            <span class="stat-label">רצף</span>
+            <span class="streak-container">
+              <span class="stat-value" id="streak-val">0</span>
+              <span class="streak-flame" id="flame-icon">🔥</span>
+            </span>
+          </div>
+        </div>
+
+        <div class="header-group">
+          <span class="feedback-badge correct" id="mode-badge">קלאסי</span>
+          <div class="lives-container" id="lives-display">
+            <!-- Hearts will be generated dynamically -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Timer Indicator -->
+      <div class="timer-wrapper" id="timer-wrapper">
+        <div class="timer-bar" id="timer-bar"></div>
+      </div>
+
+      <!-- Main Word Card -->
+      <div class="question-container">
+        <div class="word-card" id="word-card">
+          <span class="target-word" id="target-word">טוען...</span>
+        </div>
+
+        <!-- 4 choices grid -->
+        <div class="choices-grid" id="choices-grid">
+          <!-- Buttons generated dynamically -->
+        </div>
+      </div>
+
+      <!-- Control Bar -->
+      <div class="game-controls">
+        <button class="btn-secondary" id="home-btn">
+          <span>🏠</span>
+          <span>יציאה לתפריט</span>
+        </button>
+        <button class="btn-secondary" id="skip-btn">
+          <span>דילוג</span>
+          <span>⏭️</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 3. FEEDBACK PANEL (LEARNING OVERLAY) -->
+    <div id="feedback-panel" class="feedback-panel">
+      <div class="feedback-header">
+        <span class="feedback-badge incorrect">טעות!</span>
+        <span class="feedback-title">המילה מופיעה בספר אחר...</span>
+      </div>
+      
+      <div class="learning-box">
+        <div>
+          <span>המילה: </span>
+          <strong id="learning-word" style="color: var(--text-primary); font-size: 1.1rem;"></strong>
+          <span> מופיעה רק בספר </span>
+          <strong id="learning-book" style="color: var(--text-gold); font-size: 1.1rem;"></strong>
+        </div>
+        <div class="verse-tag mt-4">פסוק לדוגמה:</div>
+        <div class="verse-text" id="learning-verse-text">
+          <!-- Dynamic text here -->
+        </div>
+      </div>
+
+      <button class="btn-primary" id="close-feedback-btn">
+        <span>המשך לשאלה הבאה</span>
+        <span>←</span>
+      </button>
+    </div>
+
+    <!-- 4. GAMEOVER SCREEN -->
+    <div id="gameover-screen" class="screen">
+      <div class="completion-card">
+        <div class="trophy-glow" id="trophy-icon">🏆</div>
+        <h2>המשחק הסתיים!</h2>
+        
+        <div class="score-display">
+          <span class="stat-label">הניקוד שלך</span>
+          <span class="score-num" id="end-score">0</span>
+          <span class="new-record-badge" id="new-record-badge">שיא חדש! 🎉</span>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stats-pill">
+            <span class="label">מצב משחק</span>
+            <span class="val" id="end-mode">קלאסי</span>
+          </div>
+          <div class="stats-pill">
+            <span class="label">רצף שיא</span>
+            <span class="val" id="end-streak">0</span>
+          </div>
+          <div class="stats-pill" style="grid-column: span 2;">
+            <span class="label">אחוזי דיוק</span>
+            <span class="val" id="end-accuracy">0%</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="gameover-actions">
+        <div class="gameover-row">
+          <button class="btn-primary" id="restart-btn" style="margin:0;">שחק שוב 🔁</button>
+          <button class="btn-secondary" id="go-home-btn" style="justify-content: center; font-size: 1.1rem; border-radius: 16px;">תפריט ראשי</button>
+        </div>
+        <button class="btn-secondary" id="share-btn" style="justify-content: center; font-size: 1.1rem; border-radius: 16px; width: 100%;">
+          שפוך לחברים 📢
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Scripts -->
+  <script src="data.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
